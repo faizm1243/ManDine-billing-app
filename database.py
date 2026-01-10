@@ -9,7 +9,7 @@ def initialize_database():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Branches table
+    # Branches (multi-branch support)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS branches (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +19,7 @@ def initialize_database():
     )
     """)
 
-    # Users table
+    # Users (offline login)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +31,7 @@ def initialize_database():
     )
     """)
 
-    # Settings table (tax, printer, branding)
+    # Settings (taxes, printer width, branding)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
@@ -39,6 +39,11 @@ def initialize_database():
     )
     """)
 
+    # Create default admin user (first run only)
+    cursor.execute("""
+    INSERT OR IGNORE INTO users (username, password, role)
+    VALUES ('admin', 'admin123', 'admin')
+    """)
+
     conn.commit()
     conn.close()
-
