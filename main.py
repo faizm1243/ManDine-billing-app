@@ -82,4 +82,4 @@ if __name__ == "__main__":
     """)
 
     login = LoginWindow(launch_main_app)
-    login.s
+    login.show()
