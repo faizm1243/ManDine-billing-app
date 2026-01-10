@@ -1,22 +1,28 @@
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QTabWidget, QWidget, QLabel, QVBoxLayout
+    QApplication, QMainWindow, QTabWidget,
+    QWidget, QLabel, QVBoxLayout
 )
+from PyQt5.QtCore import Qt
+
 from database import initialize_database
 from login import LoginWindow
+
 
 class MainWindow(QMainWindow):
     def __init__(self, user):
         super().__init__()
         self.user = user
+
         self.setWindowTitle("ManDine POS")
-        self.resize(1000, 600)
+        self.resize(1100, 650)
 
         tabs = QTabWidget()
+        tabs.setTabPosition(QTabWidget.North)
 
-        tabs.addTab(self.placeholder("Order Details"), "Order Details")
+        tabs.addTab(self.placeholder("Order Details (Coming Next)"), "Order Details")
         tabs.addTab(self.placeholder("Menu (Locked)"), "Menu")
-        tabs.addTab(self.placeholder("Status"), "Status")
+        tabs.addTab(self.placeholder("Status (Analytics)"), "Status")
         tabs.addTab(self.placeholder("History"), "History")
 
         self.setCentralWidget(tabs)
@@ -24,18 +30,56 @@ class MainWindow(QMainWindow):
     def placeholder(self, text):
         widget = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(QLabel(text))
+        label = QLabel(text)
+        label.setAlignment(Qt.AlignCenter)
+        label.setStyleSheet("font-size:16px; color:#555;")
+        layout.addWidget(label)
         widget.setLayout(layout)
         return widget
 
-def start_app(user):
+
+def launch_main_app(user):
     window = MainWindow(user)
     window.show()
 
+
 if __name__ == "__main__":
+    # Initialize DB (safe to call multiple times)
     initialize_database()
 
     app = QApplication(sys.argv)
-    login = LoginWindow(start_app)
-    login.show()
-    sys.exit(app.exec_())
+
+    # Global UI theme (White / Black / Red)
+    app.setStyleSheet("""
+        QMainWindow {
+            background-color: white;
+        }
+        QLabel {
+            color: black;
+        }
+        QPushButton {
+            background-color: #b00020;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #d32f2f;
+        }
+        QLineEdit {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        QTabBar::tab {
+            padding: 10px 18px;
+            font-weight: bold;
+        }
+        QTabBar::tab:selected {
+            background: #b00020;
+            color: white;
+        }
+    """)
+
+    login = LoginWindow(launch_main_app)
+    login.s
