@@ -70,15 +70,47 @@ class MainWindow(QMainWindow):
         if has_permission("view_kitchen"):
             tabs.addTab(self.placeholder("Kitchen (KOT)"), "Kitchen")
 
+        # Admin-only Settings tab
+        if self.user[2] == "admin":
+            tabs.addTab(self.settings_tab(), "Settings")
+
         self.setCentralWidget(tabs)
 
     def placeholder(self, text):
         widget = QWidget()
         layout = QVBoxLayout()
+
         label = QLabel(text)
         label.setAlignment(Qt.AlignCenter)
         label.setStyleSheet("font-size:16px; color:#555;")
+
         layout.addWidget(label)
+        widget.setLayout(layout)
+        return widget
+
+    def settings_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        title = QLabel("⚙ Settings (Admin Only)")
+        title.setAlignment(Qt.AlignLeft)
+        title.setStyleSheet("font-size:18px; font-weight:bold;")
+
+        info = QLabel(
+            "• User Management\n"
+            "• Role & Permission Control\n"
+            "• Theme Selection\n"
+            "• Audio Alerts (KOT)\n"
+            "• Database / NAS Path\n\n"
+            "Settings UI will be enabled step-by-step."
+        )
+        info.setStyleSheet("font-size:14px;")
+
+        layout.addWidget(title)
+        layout.addSpacing(10)
+        layout.addWidget(info)
+        layout.addStretch()
+
         widget.setLayout(layout)
         return widget
 
