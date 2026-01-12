@@ -43,7 +43,10 @@ class MainWindow(QMainWindow):
 main_window = None  # global reference
 
 def launch_main_app(user):
+    global CURRENT_USER
     global main_window
+
+    CURRENT_USER = user
     main_window = MainWindow(user)
     main_window.show()
 
