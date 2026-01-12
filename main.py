@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
+CURRENT_USER = None
+
 from database import initialize_database
 from login import LoginWindow
 
