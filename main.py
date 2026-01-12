@@ -5,12 +5,45 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
-CURRENT_USER = None
-
-from database import initialize_database
+from database import initialize_database, get_connection
 from login import LoginWindow
 
 
+# -----------------------------
+# Global user context
+# -----------------------------
+CURRENT_USER = None
+main_window = None
+
+
+# -----------------------------
+# Permission helper
+# -----------------------------
+def has_permission(permission):
+    if not CURRENT_USER:
+        return False
+
+    role = CURRENT_USER[2]  # role column from users table
+
+    # Admin has all permissions
+    if role == "admin":
+        return True
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT 1 FROM role_permissions WHERE role=? AND permission=?",
+        (role, permission)
+    )
+    result = cursor.fetchone()
+    conn.close()
+
+    return result is not None
+
+
+# -----------------------------
+# Main Application Window
+# -----------------------------
 class MainWindow(QMainWindow):
     def __init__(self, user):
         super().__init__()
@@ -22,10 +55,20 @@ class MainWindow(QMainWindow):
         tabs = QTabWidget()
         tabs.setTabPosition(QTabWidget.North)
 
-        tabs.addTab(self.placeholder("Order Details (Coming Next)"), "Order Details")
-        tabs.addTab(self.placeholder("Menu (Locked)"), "Menu")
-        tabs.addTab(self.placeholder("Status (Analytics)"), "Status")
-        tabs.addTab(self.placeholder("History"), "History")
+        if has_permission("view_orders"):
+            tabs.addTab(self.placeholder("Order Details (Coming Next)"), "Order Detail")
+
+        if has_permission("view_menu"):
+            tabs.addTab(self.placeholder("Menu (Locked)"), "Menu")
+
+        if has_permission("view_status"):
+            tabs.addTab(self.placeholder("Status (Analytics)"), "Status")
+
+        if has_permission("view_history"):
+            tabs.addTab(self.placeholder("History"), "History")
+
+        if has_permission("view_kitchen"):
+            tabs.addTab(self.placeholder("Kitchen (KOT)"), "Kitchen")
 
         self.setCentralWidget(tabs)
 
@@ -40,8 +83,9 @@ class MainWindow(QMainWindow):
         return widget
 
 
-main_window = None  # global reference
-
+# -----------------------------
+# App launcher after login
+# -----------------------------
 def launch_main_app(user):
     global CURRENT_USER
     global main_window
@@ -51,8 +95,11 @@ def launch_main_app(user):
     main_window.show()
 
 
+# -----------------------------
+# Application Entry Point
+# -----------------------------
 if __name__ == "__main__":
-    # Initialize DB (safe to call multiple times)
+    # Initialize DB (safe on every run)
     initialize_database()
 
     app = QApplication(sys.argv)
@@ -90,10 +137,10 @@ if __name__ == "__main__":
     """)
 
     login = LoginWindow(launch_main_app)
-login.show()
+    login.show()
 
-try:
-    sys.exit(app.exec_())
-except Exception as e:
-    print("FATAL ERROR:", e)
-    input("Press ENTER to close...")
+    try:
+        sys.exit(app.exec_())
+    except Exception as e:
+        print("FATAL ERROR:", e)
+        input("Press ENTER to close...")
