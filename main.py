@@ -82,4 +82,10 @@ if __name__ == "__main__":
     """)
 
     login = LoginWindow(launch_main_app)
-    login.show()
+login.show()
+
+try:
+    sys.exit(app.exec_())
+except Exception as e:
+    print("FATAL ERROR:", e)
+    input("Press ENTER to close...")
