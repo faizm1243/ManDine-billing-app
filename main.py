@@ -38,9 +38,12 @@ class MainWindow(QMainWindow):
         return widget
 
 
+main_window = None  # global reference
+
 def launch_main_app(user):
-    window = MainWindow(user)
-    window.show()
+    global main_window
+    main_window = MainWindow(user)
+    main_window.show()
 
 
 if __name__ == "__main__":
