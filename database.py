@@ -1,9 +1,11 @@
 import sqlite3
+from config import get_db_path
 
-DB_NAME = "mandine.db"
+def get_db_name():
+    return get_db_path()
 
 def get_connection():
-    return sqlite3.connect(DB_NAME)
+    return sqlite3.connect(get_db_name(), timeout=30)
 
 def initialize_database():
     conn = get_connection()
