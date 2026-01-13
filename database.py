@@ -1,6 +1,16 @@
 import sqlite3
 from config import get_db_path
 
+# -----------------------------
+# Order state machine (single source of truth)
+# -----------------------------
+ORDER_STATES = [
+    "NEW",              # Created by receptionist
+    "SENT_TO_KITCHEN",  # Sent to kitchen (KOT)
+    "COOKING",          # Kitchen accepted
+    "READY",            # Food ready
+    "SERVED",           # Completed
+]
 
 # -----------------------------
 # DB helpers
@@ -66,7 +76,21 @@ def initialize_database():
         value TEXT
     )
     """)
-
+    
+    # -----------------------------
+    # Orders (state machine backbone)
+    # -----------------------------
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id TEXT UNIQUE NOT NULL,
+        customer_name TEXT,
+        customer_phone TEXT,
+        status TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    
     # -----------------------------
     # Orders (for future steps – state machine ready)
     # -----------------------------
@@ -135,3 +159,19 @@ def initialize_database():
 
     conn.commit()
     conn.close()
+
+def update_order_status(order_id, new_status):
+    if new_status not in ORDER_STATES:
+        raise ValueError(f"Invalid order state: {new_status}")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE orders SET status=? WHERE order_id=?",
+        (new_status, order_id)
+    )
+
+    conn.commit()
+    conn.close()
+
