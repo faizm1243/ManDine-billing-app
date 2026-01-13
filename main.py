@@ -15,7 +15,16 @@ from login import LoginWindow
 CURRENT_USER = None
 main_window = None
 
-
+# -----------------------------
+# Permissions master list
+# -----------------------------
+ALL_PERMISSIONS = [
+    ("view_orders", "View Order Details"),
+    ("view_menu", "View Menu"),
+    ("view_status", "View Status / Analytics"),
+    ("view_history", "View Order History"),
+    ("view_kitchen", "View Kitchen (KOT)"),
+]
 # -----------------------------
 # Permission helper
 # -----------------------------
@@ -93,26 +102,42 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         title = QLabel("⚙ Settings (Admin Only)")
-        title.setAlignment(Qt.AlignLeft)
         title.setStyleSheet("font-size:18px; font-weight:bold;")
-
-        info = QLabel(
-            "• User Management\n"
-            "• Role & Permission Control\n"
-            "• Theme Selection\n"
-            "• Audio Alerts (KOT)\n"
-            "• Database / NAS Path\n\n"
-            "Settings UI will be enabled step-by-step."
-        )
-        info.setStyleSheet("font-size:14px;")
-
         layout.addWidget(title)
-        layout.addSpacing(10)
-        layout.addWidget(info)
-        layout.addStretch()
 
+        layout.addSpacing(10)
+
+        subtitle = QLabel("Role → Permission Overview")
+        subtitle.setStyleSheet("font-size:14px; font-weight:bold;")
+        layout.addWidget(subtitle)
+    
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        roles = cursor.execute(
+            "SELECT DISTINCT role FROM users"
+        ).fetchall()
+
+        for (role,) in roles:
+            role_label = QLabel(f"🧑 Role: {role}")
+            role_label.setStyleSheet("margin-top:10px; font-weight:bold;")
+            layout.addWidget(role_label)
+
+            for perm, perm_label in ALL_PERMISSIONS:
+                cursor.execute(
+                    "SELECT 1 FROM role_permissions WHERE role=? AND permission=?",
+                    (role, perm)
+                )
+                has = cursor.fetchone() is not None
+                status = "✅" if has or role == "admin" else "❌"
+
+                layout.addWidget(QLabel(f"  {status} {perm_label}"))
+
+        conn.close()
+        layout.addStretch()
         widget.setLayout(layout)
         return widget
+
 
 
 # -----------------------------
