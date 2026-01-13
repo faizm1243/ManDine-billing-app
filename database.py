@@ -2,6 +2,9 @@ import sqlite3
 from config import get_db_path
 
 
+# -----------------------------
+# DB helpers
+# -----------------------------
 def get_db_name():
     return get_db_path()
 
@@ -10,6 +13,9 @@ def get_connection():
     return sqlite3.connect(get_db_name(), timeout=30)
 
 
+# -----------------------------
+# Database initialization
+# -----------------------------
 def initialize_database():
     conn = get_connection()
     cursor = conn.cursor()
@@ -40,23 +46,14 @@ def initialize_database():
     )
     """)
 
+    # -----------------------------
     # Role → Permission mapping
+    # -----------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS role_permissions (
         role TEXT NOT NULL,
         permission TEXT NOT NULL,
         PRIMARY KEY (role, permission)
-    )
-    """)
-
-    # -----------------------------
-    # Role-based permissions
-    # -----------------------------
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS role_permissions (
-        role TEXT NOT NULL,
-        permission TEXT NOT NULL,
-        UNIQUE(role, permission)
     )
     """)
 
@@ -71,6 +68,35 @@ def initialize_database():
     """)
 
     # -----------------------------
+    # Orders (for future steps – state machine ready)
+    # -----------------------------
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_number TEXT UNIQUE,
+        customer_name TEXT,
+        phone TEXT,
+        status TEXT,
+        payment_mode TEXT,
+        source TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # -----------------------------
+    # KOT / Order status history
+    # -----------------------------
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS order_status_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER,
+        status TEXT,
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(order_id) REFERENCES orders(id)
+    )
+    """)
+
+    # -----------------------------
     # Default admin user (first run only)
     # -----------------------------
     cursor.execute("""
@@ -79,11 +105,11 @@ def initialize_database():
     """)
 
     # -----------------------------
-    # Default permissions (non-admin)
-    # Admin implicitly has ALL permissions
+    # Default role permissions
+    # (Admin implicitly has ALL permissions)
     # -----------------------------
     default_permissions = {
-        "reception": [
+        "receptionist": [
             "view_orders",
             "create_order",
             "print_bill",
@@ -92,6 +118,11 @@ def initialize_database():
         "kitchen": [
             "view_kitchen",
             "update_kitchen_status"
+        ],
+        "cashier": [
+            "view_orders",
+            "print_bill",
+            "view_history"
         ]
     }
 
