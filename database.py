@@ -175,3 +175,30 @@ def update_order_status(order_id, new_status):
     conn.commit()
     conn.close()
 
+def create_order(order_id, customer_name, customer_phone):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO orders (order_id, customer_name, customer_phone, status)
+        VALUES (?, ?, ?, ?)
+    """, (order_id, customer_name, customer_phone, "NEW"))
+
+    conn.commit()
+    conn.close()
+
+
+def send_order_to_kitchen(order_id):
+    update_order_status(order_id, "SENT_TO_KITCHEN")
+
+
+def kitchen_accept_order(order_id):
+    update_order_status(order_id, "COOKING")
+
+
+def kitchen_mark_ready(order_id):
+    update_order_status(order_id, "READY")
+
+
+def complete_order(order_id):
+    update_order_status(order_id, "SERVED")
