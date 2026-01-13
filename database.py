@@ -40,6 +40,15 @@ def initialize_database():
     )
     """)
 
+    # Role → Permission mapping
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS role_permissions (
+        role TEXT NOT NULL,
+        permission TEXT NOT NULL,
+        PRIMARY KEY (role, permission)
+    )
+    """)
+
     # -----------------------------
     # Role-based permissions
     # -----------------------------
